@@ -1,27 +1,33 @@
-node(){
-
-	def sonarHome = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-	
-	stage('Code Checkout'){
-		checkout changelog: false, poll: false, scm: scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'GitHubCreds', url: 'https://github.com/anujdevopslearn/MavenBuild']])
-	}
-	stage('Build Automation'){
-		sh """
-			ls -lart
-			mvn clean install
-			ls -lart target
-
-		"""
-	}
-	
-	stage('Code Scan'){
-		withSonarQubeEnv(credentialsId: 'SonarQubeCreds') {
-			sh "${sonarHome}/bin/sonar-scanner"
-		}
-		
-	}
-	
-	stage('Code Deployment'){
-		deploy adapters: [tomcat9(credentialsId: 'TomcatCreds', path: '', url: 'http://54.197.62.94:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
-	}
+pipeline {
+    agent any
+    tools{
+        maven 'MAVEN_HOME'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: '8dd3374c-f539-4716-bec6-9edb525e6f7a', url: 'https://github.com/kMounika11/MavenBuild.git']])
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+            post{
+                success {
+                    echo "Archiving the artifacts"
+                    archiveArtifacts artifacts: '**/target/*.war'
+                }
+            }
+            
+        }
+        stage ('Deploy') {
+            steps {
+                deploy adapters: [tomcat9(credentialsId: 'b6277120-f038-45d5-b338-592685d7e549', path: '', url: 'http://localhost:8081/')], contextPath: null, war: '**/*.war'
+            } 
+        }
+    }
 }
+	
+	
