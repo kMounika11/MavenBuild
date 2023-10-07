@@ -5,12 +5,7 @@ pipeline {
     }
     
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: '8dd3374c-f539-4716-bec6-9edb525e6f7a', url: 'https://github.com/kMounika11/MavenBuild.git']])
-            }
-        }
-        stage('Build') {
+         stage('Build') {
             steps {
                 sh 'mvn clean package'
             }
